@@ -428,7 +428,14 @@ RCTAutoInsetsProtocol>
   }
 #endif // !TARGET_OS_OSX
   if (_allowUniversalAccessFromFileURLs) {
-    [wkWebViewConfig setValue:@TRUE forKey:@"allowUniversalAccessFromFileURLs"];
+    // The configuration-level key is not honored for fetch()/XHR from file:// pages on
+    // current WebKit; the flag has to be applied to WKPreferences through its private SPI.
+    if ([prefs respondsToSelector:@selector(_setUniversalAccessFromFileURLsAllowed:)]) {
+      [prefs setValue:@TRUE forKey:@"universalAccessFromFileURLsAllowed"];
+      _prefsUsed = YES;
+    } else {
+      [wkWebViewConfig setValue:@TRUE forKey:@"allowUniversalAccessFromFileURLs"];
+    }
   }
   if (_allowFileAccessFromFileURLs) {
     [prefs setValue:@TRUE forKey:@"allowFileAccessFromFileURLs"];
